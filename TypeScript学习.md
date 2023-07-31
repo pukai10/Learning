@@ -1315,3 +1315,469 @@ Test1
 test2
 test4
 ```
+## 接口
+### 定义
+```
+interface interface_name{
+
+}
+```
+
+```
+interface IPerson{
+	firstName:string,
+	lastName:string,
+	sayHi:()=>string
+}
+
+var customer:IPerson = {
+	firstName:"Tim",
+	lastName:"Hand",
+	sayHi:():string=>{return "Hi there"}
+}
+
+console.log(customer.firstName)
+console.log(customer.lastName)
+console.log(customer.sayHi())
+
+输出
+Tim
+Hand
+Hi there
+```
+
+### 联合类型和接口
+```
+interface RunOptions{
+	program:string;
+	commandLine:string[] | string | (()=>string);
+}
+var options:RunOptions = { program:"test1",commandLine:"Hello"}
+console.log(options.commandLine)     //Hello
+
+options = {program:"test1",commandLine:["Hello","World"]}
+console.log(options.commandLine[0])  //Hello
+console.log(options.commandLine[1])  //World
+
+options = { program:"test1",commandLine:()=>{return "**Hello World**"}}
+
+var fn:any = options.commandLine;
+console.log(fn())    //**Hello World**
+```
+
+### 接口和数组
+```
+interface namelist{
+	[index:number]:string
+}
+
+var list2:namelist = ["Test1","Test2","test3"]
+//var list2:namelist = ["Test1",1,"Test2"]   //报错
+console.log(list2)     //[ 'Test1', 'Test2', 'test3' ]
+
+interface ages{
+	[index:string]:number
+}
+
+var agelist:ages = {}
+agelist["aa"] = 15
+
+console.log(agelist)    //{aa:15}
+```
+
+### 接口继承
+接口继承就是说接口可以通过其他接口来扩展自己
+TypeScript允许接口继承多个接口，继承使用关键字extends
+```
+interface Person{
+ age:number
+}
+
+interface Musician extends Person{
+	instrument:string
+}
+var drummer = <Musician>{};
+drummer.age = 27;
+drummer.instrument = "Drand";
+console.log(drummer.age)
+console.log(drummer.instrument)
+console.log(drummer)
+输出
+27
+Drand
+{ age: 27, instrument: 'Drand' }
+```
+
+```
+interface IParent1{
+	v1:number
+}
+
+interface IParent2{
+	v2:number
+}
+
+interface Child extends IParent1,IParent2{}
+var Iobj:Child = {v1:12,v2:24}
+console.log("value1:" + Iobj.v1 + " value2:" + Iobj.v2)   //value1:12 value2:24
+```
+
+## 类
+定义类的关键字为class,后面紧跟类名，类可以包含以下几个模块:
+- 字段
+- 构造函数
+- 方法
+```
+class Car
+{
+	engine:string;
+	constructor(engine:string)
+	{
+		this.engine = engine
+	}
+
+	disp():void
+	{
+		console.log("发动机为:" + this.engine)
+	}
+}
+
+var car = new Car("New Engine")
+
+console.log(car.engine)
+car.disp()
+console.log(car)
+
+输出
+New Engine
+发动机为:New Engine
+Car { engine: 'New Engine' }
+
+```
+
+### 类的继承
+TypeScript支持继承类，我们可以在创建类的时候继承一个已存在的类，这个已存在的类称为父类，继承它的类称为子类。类继承使用关键字extends，子类除了不能继承父类的私有成员（方法和属性）和构造函数，其他的都可以继承。
+TypeScript一次只能继承一个类，不支持继承多个类，但支持多重继承(A继承B,B继承C)
+```
+class Shape{
+	Area:number
+	constructor(a:number){
+		this.Area = a
+	}
+}
+
+class Circle extends Shape{
+	disp() :void{
+		console.log("园的面积:" + this.Area)
+	}
+}
+
+var obj = new Circle(124)
+obj.disp()
+
+ class Child extends Root {}
+ class Leaf extends Child {} // 多重继承，继承了 Child 和 Root 类
+ var leaf = new Leaf();
+ leaf.str ="hello"
+ console.log(leaf.str)
+```
+
+### 继承类的方法重写
+```
+class PrinterClass{
+	doPrint():void{
+		console.log("父类的doPront方法")
+	}
+}
+
+class StringPrinter extends PrinterClass{
+	doPrint():void{
+		super.doPrint()
+		console.log("子类的doPrint方法")
+	}
+}
+
+var printer = new StringPrinter()
+printer.doPrint()
+输出
+父类的doPront方法
+子类的doPrint方法
+```
+
+### static 关键字
+static 关键字用于定义类的数据成员为静态的，静态成员可以直接通过类名调用
+```
+class StaticMem{
+	static num:number;
+	static disp():void{
+		console.log("静态 num：" + StaticMem.num)
+	}
+}
+StaticMem.num = 13;
+StaticMem.disp()
+输出
+静态 num：13
+```
+
+### instanceof 运算符
+instanceof 运算符用于判断对象是否是指定的类型，如果是返回true，否则返回false
+```
+class Person{}
+var obj = new Person()
+var isPerson = obj instanceof Person;
+console.log(isPerson)    //true
+```
+
+### 访问控制修饰符
+- public（默认）: 公有，可以在任何地方被访问
+- protected：受保护，可以被其自身以及子类访问
+- private:私有，只能被其定义所在的类访问
+```
+class TestClass{
+	str1:string = "hello"
+	private str2:string = "world"
+}
+
+var obj = new TestClass()
+console.log(obj.str1)  
+//console.log(obj.str2)    //error TS2341: Property 'str2' is private and only accessible within class 'TestClass'
+```
+
+### 类和接口
+类可以实现接口，使用关键字implements
+```
+interface ILoan{
+	num:number
+}
+
+class AgeLoan implements ILoad{
+	num:number    //接口字段
+	rebate:number;
+	constructor(num:number,rebate:number){
+		this.num = num;
+		this.rebate = rebate
+	}
+}
+
+var obj = new AgeLoan(10,20)
+console.log(obj.num,obj.rebate)    //10 20
+```
+
+
+## 对象
+对象是包含一组键值对的实例，值可以是标量、函数、数组、对象等
+```
+var object_name = {
+	key1:"value1",
+	key2:"value",
+	key3:function(){
+	},
+	key4:{"content1","content2"}
+}
+```
+
+```
+var sites = {
+	site1:"R",
+	site2:"G",
+}
+
+console.log(sites.site1)    //R
+console.log(sites.site2)    //G
+```
+
+### 类型模板
+```
+var sites = {
+	site1:"R",
+	site2:"G",
+	sayHello:function(){}
+}
+//添加方法
+sites.sayHello = function() { return "Hello world"}
+
+sites.sayHello()
+
+var invokesites = function(obj:{site1:string,site2:string}){
+	console.log("site1:" + obj.site1)
+	console.log("site2:" + obj.site2)
+}
+
+invokesites(sites)
+```
+
+### Duck Typing
+鸭子类型是动态类型的一种风格，是多态的一种形式
+在这种风格中，一个对象有效的语义，不是由继承自特定的类或实现特定的接口，而是由当前方法和属性的集合决定。
+在鸭子类型中，关注点在于对象的行为能做什么，而不是关注对象所属的类型。
+```
+interface IPoint{
+	x:number
+	y:number
+}
+
+function addPoints(p1:IPoint,p2:IPoint):IPoint{
+	var x = p1.x + p2.x
+	var y = p1.y + p2.y
+	return {x:x,y:y}
+}
+
+var newPoint = addPoints({x:3,y:4},{x:5,y:1})
+//var newPoint2 = addPoints({x:1},{x:4,y:3})  //报错
+console.log(newPoint.x,newPoint.y)   //8 5
+```
+
+## 命名空间
+命名空间一个最明确的目的就是解决重名问题
+```
+namespace SomeNameSpaceName{
+	export interface ISomeInterfaceName{}
+	export class SomeClassName{}
+}
+
+//使用
+SomeNameSpaceName.SomeClassName
+```
+如果一个命名空间在一个单独的TypeScript文件中，则应使用三斜杠///引用它：
+```
+///<reference path = "SomeFileName.ts" />
+```
+
+IShape.ts文件代码
+```
+namespace Drawing{
+	export interface IShape{
+		draw();
+	}
+}
+```
+
+Circle.ts文件代码
+```
+/// <reference path = "IShape.ts" />
+namespace Drawing{
+	export class Circle implements IShape{
+		public draw()
+		{
+			console.log("Circle is draw()")
+		}
+	}
+}
+```
+
+Triangle.ts文件代码
+```
+/// <reference path = "IShape.ts" />
+namespace Drawing{
+	export class Triangle implements IShape{
+		public draw(){
+			console.log("Triangle is draw()")
+		}
+	}
+}
+```
+
+TestShape.ts文件代码
+```
+/// <reference path = "IShape.ts" />
+/// <reference path = "Circle.ts" />
+/// <reference path = "Triangle.ts" />
+function drawAllShapes(shape:Drawing.IShape){
+	shape.draw();
+}
+drawAllShapes(new Drawing.Circle())
+drawAllShapes(new Drawing.Triangle())
+
+```
+
+使用tsc命令编译以上代码
+```
+tsc --outFile app.js TestShap.ts
+```
+
+使用node命令查看输出结果
+```
+Circle is draw()
+Triangle is draw()
+```
+
+### 嵌套命名空间
+Invoice.ts文件代码
+```
+namespace Runoob { 
+	export namespace invoiceApp { 
+		export class Invoice { 
+			public calculateDiscount(price: number) {
+				 return price * .40;
+			}
+		}
+	 }
+ }
+```
+InvoiceTest.ts文件代码
+```
+/// <reference path = "Invoice.ts" />
+var invoice = new Runoob.invoiceApp.Invoice();
+console.log(invoice.calculateDiscount(500))   //200
+```
+
+## 模块
+TypeScript模块的设计理念是可以更换的组织代码。
+模块是在其自身的作用域里执行，并不是在全局作用域，这意味着定义在模块里面的变量、函数和类等在模块外部是不可见的，除非明确地使用export导出它们。类似的，我们必须通过import导入其他模块导出的变量、函数、类等。
+两个模块之间的关系是通过在文件级别上使用import和export建立的。
+模块使用模块加载器去导入其他模块。在运行时，模块加载器的作用是在执行模块代码前去查找并执行这个模块所有依赖。大家最熟悉的JavaScript模块加载是服务于Node.js的CommonJS和服务于Web应用的Require.js。
+### 实例
+
+IShape.ts文件代码：
+```
+/// <reference path = "IShape.ts" />
+export interface IShape{
+	draw();
+}
+```
+
+Circle.ts文件代码:
+```
+import shape = require("./IShape")
+export class Circle implements shape.IShape{
+	public draw(){
+		console.log("Cirlce is draw (exeernal moudle)");
+	}
+}
+```
+
+Triangle.ts文件代码:
+```
+import shape = require("./IShape"); 
+export class Triangle implements shape.IShape { 
+	public draw() { 
+		console.log("Triangle is drawn (external module)"); 
+	} 
+}
+```
+
+TestShape.ts文件代码
+```
+import shape = require("./IShape");
+import circle = require("./Circle");
+import triangle = require("./Triangle");  
+function drawAllShapes(shapeToDraw: shape.IShape) {
+   shapeToDraw.draw();
+}
+drawAllShapes(new circle.Circle());
+drawAllShapes(new triangle.Triangle());
+
+
+
+```
+
+使用tsc命令编译以上代码
+```
+tsc --module commonjs TestShape.ts
+node TestShape.js
+输出
+Cirlce is draw (exeernal moudle)
+Triangle is drawn (external module)
+```
+
+## 声明文件
