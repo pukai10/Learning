@@ -1,0 +1,13 @@
+{
+  "spellcheck": false,
+  "alwaysUpdateLinks": true,
+  "trashOption": "system",
+  "attachmentFolderPath": "/",
+  "pdfExportSettings": {
+    "includeName": true,
+    "pageSize": "Letter",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  }
+}
