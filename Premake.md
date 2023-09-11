@@ -172,3 +172,10 @@ libdirs {os.findlib("X11")}
 ```
 
 # 配置和平台
+配置是要应用于构建的设置集合，包括标志和开关、头文件和库搜索目录等。每个工作区定义自己的配置名称列表；大多数IDE提供默认值"Debug"和"Release"。
+## 构建配置
+前面的示例演示了如何指定生成配置
+```
+workspace "MyWorkSpace"
+	configurations {"Debug", "Release"}
+```
