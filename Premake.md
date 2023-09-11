@@ -179,3 +179,287 @@ libdirs {os.findlib("X11")}
 workspace "MyWorkSpace"
 	configurations {"Debug", "Release"}
 ```
+您不限于这些名称，还可以使用对您的软件项目和构建环境有意义的任何名称。
+```
+workspace "MyWorkSpace"
+	configurations { "Debug","DebugDLL","Release","ReleaseDLL"}
+```
+重要的是要注意，这些名称本身没有任何意义，您可以使用任何您喜欢的名称
+```
+workspace "MyWorkspace"
+   configurations { "Froobniz", "Fozbat", "Cthulhu" }
+```
+生成配置的含义取决于应用于它的设置
+```
+workspace "HelloWorld"
+	configurations {"Debug","Release"}
+	filter "configurations:Debug"
+		defines {"DEBUG"}
+		flags {"Symbols"}
+	filter "configurations:Release"
+		defines{"NDEBUG"}
+		optimiz "On"
+```
+__filter__ 将后面详细介绍
+
+## 平台
+”平台“在这里有点用词不当，我再次遵循Visual Studio命名法。实际上，平台只是另一组构建配置的名称，提供了另一个用于配置项目的轴。
+```
+configurations {"Debug","Release"}
+platforms{"Win32","Win64","Xbox360"}
+```
+
+设置后，列出的平台将显示在IDE的平台列表中。因此，您可以选择”Debug Win32“内部版本或”Release Xbox360"内部版本，或这两个列表的任意组合。
+
+就像构建配置一样。平台名称本身没有任何意义。您可以通过使用 __filter__ 功能应用设置来提供含义
+```
+configurations {"Debug","Release"}
+platforms {"Win32","Win64","Xbox360"}
+
+filter {"platforms:Win32"}
+	system "Windows"
+	architecture "x86"
+
+filter {"platforms:Win64"}
+	system "Windows"
+	architecture "x86_64"
+
+filter {"platforms:Xbox360"}
+	system "Xbox360"
+```
+
+与构建配置不同，平台是可以完全可选的，如果不需要它们，只需根本不调用平台函数，就会使用工具集的默认行为。
+
+平台只是构建配置的另一种形式，您可以使用所有相同的设置，并且应用相同的范围规则。您可以在没有平台的情况下使用 __system__ 和 __architecture()__ 设置，也可以在平台配置中使用其他非平台设置。如果您曾经做过 “调试静态”、“调试DLL” 、“发布静态” 和“发布DLL”等构建配置，平台可以真正简化事情。
+```
+configurations {"Debug","Release"}
+platforms {"Static","DLL"}
+
+filter {"platforms:Static"}
+	kind "StaticLib"
+
+filter {"platforms:DLL"}
+	kind "SharedLib"
+	defines {"DLL_EXPORTS"}
+```
+
+## 每个项目的配置
+现在可以为每个项目指定配置和平台列表，例如，应针对Windows而不是游戏机生成的项目可以删除改平台：
+```
+workspace "MyWorkSpace"
+	configurations {"Debug","Release"}
+	platforms {"Windows","PS3"}
+
+project "MyProject"
+	removeplatforms {"PS3"}
+```
+
+配置图是一项相关功能，可将工作区级配置转化为项目级值，从而允许将具有不同配置和平台列表的项目组合到单个工作区中。例如，可以使用通用调试和发布配置单元测试库。
+```
+project "UnitTest"
+	configurations {"Debug","Release"}
+```
+
+若要在包含一组更复杂的配置的工作区中重用该测试项目，请创建从工作区的配置到相应项目配置的映射
+```
+workspace "MyWorkspace"
+	configurations {"Debug","Development","Profile","Release"}
+ project "MyProject"
+	 configmap{
+		["Development"] = "Debug"
+		["Profile"] = "Release"	
+	}
+```
+
+请务必注意，项目无法向工作区添加新配置，他们只能删除对现有工作区配置的支持，或将其映射到其他项目配置。
+
+# 过滤器(filter)
+
+Premake的过滤系统允许您将构建设置定位到您希望它们出现的确切配置。可以按特定生成配置平台、操作系统、目标操作等进行筛选。
+
+下面是一个示例，该符号在工作区的“Debug"生成配置中设置名为"DEBUG"的预处理器符号，并在发布配置中设置名为”NDEBUG"的预处理器符号。
+```
+workspace "MyWorkspace"  
+	configurations { "Debug", "Release" }  
+  
+	filter "configurations:Debug"  
+		defines { "DEBUG" }  
+  
+	filter "configurations:Release"  
+		defines { "NDEBUG" }
+```
+筛选器始终由两部分组成：指定筛选器所依据的字段的前缀，以及指定应接受该字段的那些值得模式。
+
+过滤器遵循Premake得脚本伪声明样式：调用 filter() 使该过滤器条件 “活动”。随后出现在脚本中得所有设置都将按此条件进行过滤，知道激活新得过滤器或容器(工作区、项目)。
+
+筛选器在生成时（创建工作区或项目文件并将其写入磁盘时）进行评估。当需要输入此工作区得调试生成配置得设置时，Premake会评估筛选器列表以查找与调试条件匹配得筛选器。
+
+使用上面得例子，Premake将首先 考虑过滤器"configurations:Debug"。它将检查当前正在输出得配置得名称，查看它是否匹配，因此包括下一次筛选调用之前得任何设置。
+
+筛选器"configurations:Release" 将被跳过，因为模式“Release”与当前正在生成得配置得名称不匹配("Debug")。
+最后一个筛选器“{}”未定义任何筛选条件，因此不会排除任何内容。在此筛选器之后应用得任何设置都将显示在工作区或项目得所在配置中。
+过滤器也可以组合。用“or"或”not"进行修改，并使用模式匹配。
+
+```
+-- All of these settings will appear in the Debug configuration
+filter "configurations:Debug"
+  defines { "DEBUG" }
+  flags { "Symbols" }
+
+-- All of these settings will appear in the Release configuration
+filter "configurations:Release"
+  defines { "NDEBUG" }
+  optimize "On"
+
+-- This is a sneaky bug (assuming you always want to link against these lib files).
+-- Because the last filter set was Release. These libraries will only be linked for release.
+-- To fix this place this after the "Deactivate" filter call below. Or before any filter calls.
+links { "png", "zlib" }
+
+-- "Deactivate" the current filter; these settings will apply
+-- to the entire workspace or project (whichever is active)
+filter {}
+  files { "**.cpp" }
+```
+
+# 构建设置
+Premake 提供了越来越多得构建设置列表，您可以调整这些设置；下表列出了一些最常见得配置任务，并附有指向相应函数得链接
+
+| 函数 | 描述|
+| --- | --- |
+| kind | 指定二进制类型（可执行文件、库)|
+| files,removefiles | 指定源代码文件 |
+| defines | 定义编译器或预处理器符号|
+| includedirs | 找到包含文件 |
+| pchheader,pchsource | 设置预编译标头 |
+| links,libdirs | 链接库、框架或其他项目 |
+| symbols | 启用调试信息 |
+| optimize | 针对尺寸或速度进行优化 |
+| buildoptions,linkoptions | 添加任意构建标志 |
+| targetname,targetdir | 设置已编译目标得名称或位置 |
+
+# 命令行参数
+## 操作和选项
+预制件识别两种类型得参数:操作和选项。
+
+操作指示预制在任何给定运行种应执行得操作。例如，该操作指示应生成Visual Studio 2013项目文件。该操作会导致删除所有生成得文件。一次只能指定一个操作。 `vs2013 clean`。
+
+选项可修改操作得行为。例如，该选项用于更改生成得文件中使用的.Net编译器集。选项可以接受值(如 或 充当标志)，如。 `dotnet --dotnet=mono --with-opengl`
+
+在脚本中，可以使用 `_ACTION` 全局变量表示当前操作。您可以使用包含键值对列表得 `_OPTIONS` 表检查选项。键是选项标识符 ("dotnet")，它引用命令行值(“mono")或无值选项得空字符串
+```
+if _ACTION =="clean" then
+	--do something
+end
+
+targetdir ( _OPTIONS["outdir"] or "out")
+```
+
+## 创建新选项
+新得命令行选项是使用 `newoption` 函数创建的，传递一个完全描述该选项的表。这最好用一些例子来说明。
+这是一个旨在强制在 3D 应用程序中使用 OpenGL 的选项。它用作一个简单的标志，并且不采用任何值。
+```
+newoption{
+	trigger = "with-opengl",
+	description = "Force the use of OpenGL for rendering,regardless of platform"
+}
+```
+
+注意每个键值对后面的逗号；这是lua表所需的语法。添加脚本后，该选项将显示在帮助文本中，您可以将触发器用作配置块中的关键字。
+```
+filter { "options:with-opengl" }
+	links {"opengldrv"}
+filter { "not options:with-opengl" }
+	links {"direct3ddrv"}
+```
+
+下一个示例显示具有一组固定允许值的选项。与上面的示例一样，它旨在允许用户指定 3D API。
+```
+newoption{
+	trigger = "gfxapi",
+	value = "API",
+	description = "Choose a particular 3D API for rendering",
+	allowed = {
+		{"opengl","OpenGL"},
+		{"direct3d","Direct3D(Windows only)"},
+		{"software","Software Renderer"}
+	},
+	default = "opengl"
+}
+```
+
+与以前一样，此新选项将集成到帮助文本中，以及每个允许值的说明。预制件将在启动时检查选项值，并对无效值引发错误。值字段显示在帮助文本中，旨在为用户提供有关预期值类型的线索。在这种情况下，帮助文本将如下所示：
+```
+--gfxapi=API      Choose a particular 3D API for rendering; one of:
+    opengl        OpenGL
+    direct3d      Direct3D (Windows only)
+    software      Software Renderer
+```
+
+与上面的示例不同，您现在将该值用作配置块中的关键字。
+```
+filter {"options:gfxapi=opengl"}
+	links{"opengldrv"}
+filter {"options:gfxapi=direct3d"}
+	links{"direct3ddrv"}
+filter { "options:gfxapi=software" }  
+	links { "softwaredrv" }
+```
+
+作为选项的最后一个示例，您可能希望指定接受不受约束的值的选项。只需省略允许的值列表即可。
+```
+newoption{
+	trigger = "outdir",
+	value = "path",
+	description = "Output directory for the compiled executable"
+}
+```
+
+## 创建新做操作
+操作的定义方式与选项大致相同，可以像这样简单:
+```
+newaction{
+	trigger = "install",
+	description = " Install the software",
+	excute = funaction()
+		--copy files ,etc.here
+	end
+}
+```
+
+触发操作时要执行的实际代码应放在函数中。 `execute()`
+这是简单的版本，非常适合不需要访问特定项目信息的一次性操作。
+
+# 使用模块
+预制可以通过使用第三方模块进行扩展，模块可以添加对新工具集、语言和框架以及全新功能的支持。
+
+要使用模块，请将模块的储存库下载或克隆到Premake的搜索路径之一，确保目标文件夹与模块的主脚本同名。
+` git clone https://github.com/dcourtois/premake-qt qt`
+然后，只需要从项目或系统脚本调用即可包含它。 `require()`
+```
+require "qt"
+```
+## 在项目中包括模块
+
+为方便起见，您可能希望在项目的源代码树中保留所需模块的副本。在这种情况下，您可以将它们放置在您希望的任何位置，并在需要时提供相对路径。例如，如果你的主**premake5.lua**位于项目树的根目录下，并且你的模块位于一个名为**build**的文件夹中，你可以像这样加载它：
+
+```
+require "build/qt"
+```
+## 系统模块
+
+您也可以将模块放在 Premake 搜索路径上的任何位置，例如**在 ~/.premake** 中。在这种情况下，不需要路径信息，您只需调用：
+
+```
+require "qt"
+```
+
+如果您希望使模块始终可用于_所有_项目，则可以在系统脚本中调用 to。在这种情况下，每次运行预制件时都会自动加载模块，并且其所有功能都将可用。`require()`
+
+## 版本要求
+
+为了确保与项目脚本的兼容性，有时要求模块依赖项的最低版本或版本范围会很有帮助。Premake包含一个修改版本Lua的`require()` 函数，该函数接受版本测试作为其第二个参数。
+
+```
+require("qt", ">=1.1")
+```
