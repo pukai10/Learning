@@ -1781,3 +1781,40 @@ Triangle is drawn (external module)
 ```
 
 ## 声明文件
+TypeScript作为JavaScript的超集，在开发过程中不可避免要引用其他第三方的JavaScript的库，虽然通过直接引用可以调用库的类和方法，但是却无法使用TypeScript诸如类型检查等特性功能。为了解决这个问题，需要将这些库的函数和方法体去掉后只保留导出类型声明，而产生出一个描述JavaScript库和模块信息的声明文件。通过引用声明文件，就可以借用TypeScript的各种特性来使用库文件了。
+### 实例
+CalcThirdPartyJsLib.js文件
+```
+var Runoob;
+(function(Runoob){
+	var Calc = (function(){
+		function Calc(){
+		}
+	})
+	Calc.prototype.doSum = function(limit){
+		var sum = 0;
+		for(var i = 0;i < limit;i++){
+			sum = sum + i;
+		}
+		return sum;
+	}
+	Runoob.Calc = Calc;
+	return Calc;
+})(Runoob || (Runoob = {}));
+var test = new Runoob.Calc();
+```
+如果我们想在TypeScript中引用上面的代码，则需要设置声明文件Calc.d.ts,代码如下:
+```
+declare module Runoob{
+	export class Calc{
+		doSum(limit:number):number;
+	}
+}
+```
+
+声明文件不包含实现，它只是类型声明，把声明文件加入到TypeScript中:
+```
+/// <reference path = "Calc.d.ts" />
+var obj = new Runoob.Calc();
+console.log(obj.doSum(10));
+```
