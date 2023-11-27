@@ -42,9 +42,31 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "b3248f3147f220ec",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.4.16"
+              }
+            }
+          },
+          {
+            "id": "426949208f2577ae",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "战棋.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
         ],
-        "currentTab": 2
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -110,7 +132,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "CMake.md",
+                "file": "战棋.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -127,7 +149,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "CMake.md",
+                "file": "战棋.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -150,7 +172,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "CMake.md"
+                "file": "战棋.md"
               }
             }
           },
@@ -181,8 +203,10 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "250691bcdffc2a0f",
+  "active": "426949208f2577ae",
   "lastOpenFiles": [
+    "战棋.md",
+    "未命名",
     "Premake.md",
     "CMake.md",
     "现代游戏引擎.md",
